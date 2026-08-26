@@ -18,14 +18,18 @@
 <div class="container mt-5">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-
         <h1>Categories</h1>
-
-        <a href="{{ route('categories.create') }}"
-           class="btn btn-primary">
-            + Add Category
-        </a>
-
+        <div>
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary me-1">
+                &larr; Admin Dashboard
+            </a>
+            <a href="{{ route('products.index') }}" class="btn btn-outline-dark me-1">
+                Manage Products
+            </a>
+            <a href="{{ route('categories.create') }}" class="btn btn-primary">
+                + Add Category
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
