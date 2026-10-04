@@ -19,7 +19,7 @@ class ProductController extends Controller
                       ->orWhere('description', 'like', '%' . $search . '%');
             })
             ->latest()
-            ->paginate(5)
+            ->paginate(10)
             ->withQueryString();
 
         return view('products.index', compact('products', 'search'));
@@ -36,6 +36,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'price' => 'required|numeric|min:0',
@@ -45,6 +46,7 @@ class ProductController extends Controller
 
         $data = [
             'name' => $request->name,
+            'brand' => $request->brand,
             'description' => $request->description,
             'price' => $request->price,
             'quantity' => $request->quantity,
@@ -79,6 +81,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'price' => 'required|numeric|min:0',
@@ -88,6 +91,7 @@ class ProductController extends Controller
 
         $data = [
             'name' => $request->name,
+            'brand' => $request->brand,
             'description' => $request->description,
             'price' => $request->price,
             'quantity' => $request->quantity,
@@ -112,7 +116,21 @@ class ProductController extends Controller
     public function details(Product $product)
     {
         $product->load('category');
-        return view('products.user_show', compact('product'));
+        
+        $relatedProducts = Product::where('id', '!=', $product->id)
+            ->where(function ($query) use ($product) {
+                if ($product->brand) {
+                    $query->where('brand', $product->brand)
+                          ->orWhere('category_id', $product->category_id);
+                } else {
+                    $query->where('category_id', $product->category_id);
+                }
+            })
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
+
+        return view('products.user_show', compact('product', 'relatedProducts'));
     }
 
     public function purchase(Request $request, Product $product)

@@ -52,6 +52,17 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Brand (Optional)</label>
+                            <input
+                                type="text"
+                                name="brand"
+                                class="form-control @error('brand') is-invalid @enderror"
+                                value="{{ old('brand') }}"
+                                placeholder="Enter product brand"
+                            >
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Description</label>
                             <textarea
                                 name="description"

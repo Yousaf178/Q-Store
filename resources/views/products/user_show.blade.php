@@ -107,7 +107,46 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
+
+@if(isset($relatedProducts) && $relatedProducts->count() > 0)
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-10">
+        <h4 class="fw-bold mb-4">You might also like</h4>
+        <div class="row g-4">
+            @foreach($relatedProducts as $relatedProduct)
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 shadow-sm border-0 product-card overflow-hidden">
+                        <a href="{{ route('products.details', $relatedProduct) }}" class="d-block bg-light text-center border-bottom">
+                            <img 
+                                src="{{ $relatedProduct->image_url }}" 
+                                alt="{{ $relatedProduct->name }}" 
+                                class="w-100" 
+                                style="height: 150px; object-fit: cover;"
+                            >
+                        </a>
+                        <div class="card-body p-3 d-flex flex-column">
+                            <div class="mb-1 text-muted small">
+                                {{ $relatedProduct->brand ?? $relatedProduct->category->name }}
+                            </div>
+                            <h6 class="card-title fw-bold mb-2">
+                                <a href="{{ route('products.details', $relatedProduct) }}" class="text-decoration-none text-dark">
+                                    {{ Str::limit($relatedProduct->name, 40) }}
+                                </a>
+                            </h6>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-success">${{ number_format($relatedProduct->price, 2) }}</span>
+                                <a href="{{ route('products.details', $relatedProduct) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
 
 <script>
     const unitPrice = {{ $product->price }};

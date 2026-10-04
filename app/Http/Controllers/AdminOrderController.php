@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderCancelledAdminMail;
+use App\Mail\OrderCancelledMail;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminOrderController extends Controller
 {
@@ -67,5 +70,29 @@ class AdminOrderController extends Controller
         $order->load(['items.product', 'user']);
 
         return view('admin.orders.show', compact('order'));
+    }
+
+    /**
+     * Cancel an order and notify the customer and admin.
+     */
+    public function cancel(Order $order)
+    {
+        if ($order->status === 'cancelled') {
+            return back()->with('error', 'This order is already cancelled.');
+        }
+
+        $order->update(['status' => 'cancelled']);
+        $order->load('items');
+
+        // Notify the customer
+        Mail::to($order->customer_email)->send(new OrderCancelledMail($order));
+
+        // Notify the admin
+        $adminEmail = env('ADMIN_EMAIL');
+        if ($adminEmail) {
+            Mail::to($adminEmail)->send(new OrderCancelledAdminMail($order));
+        }
+
+        return back()->with('success', "Order {$order->order_number} has been cancelled and the customer has been notified.");
     }
 }

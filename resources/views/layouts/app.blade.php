@@ -14,13 +14,29 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .main-content {
             flex: 1;
         }
         .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .product-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
         }
     </style>
 </head>
@@ -58,6 +74,11 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
                                     <i class="bi bi-people me-1"></i> Manage Users
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}">
+                                    <i class="bi bi-card-checklist me-1"></i> Manage Orders
                                 </a>
                             </li>
                         @else
@@ -129,20 +150,7 @@
     <!-- Content Area -->
     <main class="main-content py-4">
         <div class="container">
-            <!-- Flash Alerts -->
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+            <!-- Flash Alerts are now handled by SweetAlert2 Toasts at the bottom of the page -->
 
             @yield('content')
         </div>
@@ -157,5 +165,82 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        @if(session('success'))
+            Toast.fire({
+                icon: 'success',
+                title: '{!! addslashes(session('success')) !!}'
+            });
+        @endif
+
+        @if(session('error'))
+            Toast.fire({
+                icon: 'error',
+                title: '{!! addslashes(session('error')) !!}'
+            });
+        @endif
+
+        @if(Auth::check() && Auth::user()->isAdmin())
+            let currentDbMaxOrder = {{ \App\Models\Order::max('id') ?? 0 }};
+            let currentDbMaxUser = {{ \App\Models\User::max('id') ?? 0 }};
+            
+            let lastOrderId = localStorage.getItem('admin_last_order_id');
+            let lastUserId = localStorage.getItem('admin_last_user_id');
+
+            // Initialize localStorage with current max if empty (e.g. first time admin logs in)
+            if (lastOrderId === null) {
+                lastOrderId = currentDbMaxOrder;
+                localStorage.setItem('admin_last_order_id', lastOrderId);
+            }
+            if (lastUserId === null) {
+                lastUserId = currentDbMaxUser;
+                localStorage.setItem('admin_last_user_id', lastUserId);
+            }
+            
+            function checkNotifications() {
+                fetch(`/admin/notifications/check?last_order_id=${lastOrderId}&last_user_id=${lastUserId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.new_orders > 0) {
+                            Toast.fire({
+                                icon: 'info',
+                                title: `🔔 You have ${data.new_orders} new order(s)!`
+                            });
+                            lastOrderId = data.latest_order_id;
+                            localStorage.setItem('admin_last_order_id', lastOrderId);
+                        }
+                        if (data.new_users > 0) {
+                            Toast.fire({
+                                icon: 'info',
+                                title: `👋 ${data.new_users} new user(s) just registered!`
+                            });
+                            lastUserId = data.latest_user_id;
+                            localStorage.setItem('admin_last_user_id', lastUserId);
+                        }
+                    })
+                    .catch(err => console.error('Error fetching notifications:', err));
+            }
+
+            // Run check immediately on page load to catch events that happened while navigating
+            checkNotifications();
+
+            // Then continuously poll every 10 seconds
+            setInterval(checkNotifications, 10000);
+        @endif
+    </script>
 </body>
 </html>

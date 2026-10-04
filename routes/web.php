@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminUserController;
 use App\Models\Product;
 use App\Models\Category;
@@ -39,14 +40,28 @@ Route::middleware('auth')->group(function () {
     // User Products Catalog / Dashboard
     Route::get('/dashboard', function (Request $request) {
         $search = $request->search;
+        $minPrice = $request->min_price;
+        $maxPrice = $request->max_price;
+        $brand = $request->brand;
 
         $products = Product::with('category')
             ->when($search, function ($query, $search) {
-                $query->where('name', 'like', '%' . $search . '%')
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
                       ->orWhere('description', 'like', '%' . $search . '%');
+                });
+            })
+            ->when(!is_null($minPrice), function ($query) use ($minPrice) {
+                $query->where('price', '>=', $minPrice);
+            })
+            ->when(!is_null($maxPrice), function ($query) use ($maxPrice) {
+                $query->where('price', '<=', $maxPrice);
+            })
+            ->when($brand, function ($query, $brand) {
+                $query->where('brand', 'like', '%' . $brand . '%');
             })
             ->latest()
-            ->paginate(6)
+            ->paginate(10)
             ->withQueryString();
 
         return view('dashboard', compact('products'));
@@ -76,11 +91,35 @@ Route::middleware('auth')->group(function () {
             $productsCount = Product::count();
             $categoriesCount = Category::count();
             $usersCount = User::count();
+            $ordersCount = \App\Models\Order::count();
 
-            return view('admin.dashboard', compact('productsCount', 'categoriesCount', 'usersCount'));
+            return view('admin.dashboard', compact('productsCount', 'categoriesCount', 'usersCount', 'ordersCount'));
         })->name('admin.dashboard');
 
+        Route::get('/admin/notifications/check', function (Request $request) {
+            $lastOrderId = (int) $request->query('last_order_id', 0);
+            $lastUserId = (int) $request->query('last_user_id', 0);
+            
+            $newOrders = \App\Models\Order::where('id', '>', $lastOrderId)->count();
+            $newUsers = User::where('id', '>', $lastUserId)->count();
+            
+            $latestOrder = \App\Models\Order::latest('id')->first();
+            $latestUser = User::latest('id')->first();
+
+            return response()->json([
+                'new_orders' => $newOrders,
+                'new_users' => $newUsers,
+                'latest_order_id' => $latestOrder ? $latestOrder->id : 0,
+                'latest_user_id' => $latestUser ? $latestUser->id : 0,
+            ]);
+        })->name('admin.notifications.check');
+
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+
+        // Admin Order Routes
+        Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+        Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+        Route::post('/admin/orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
 
         Route::resource('products', ProductController::class);
         Route::resource('categories', CategoryController::class);

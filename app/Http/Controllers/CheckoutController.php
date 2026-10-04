@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderPlacedAdminMail;
+use App\Mail\OrderPlacedMail;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
@@ -118,6 +122,21 @@ class CheckoutController extends Controller
 
             // Clear session cart
             session()->forget('cart');
+
+            // Send order confirmation email to the customer
+            $order->load('items');
+            try {
+                Mail::to($order->customer_email)->send(new OrderPlacedMail($order));
+
+                // Send new order notification to the admin
+                $adminEmail = env('ADMIN_EMAIL');
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->send(new OrderPlacedAdminMail($order));
+                }
+            } catch (\Exception $mailException) {
+                // Log or ignore mail errors to prevent order failure when mail is unconfigured
+                \Illuminate\Support\Facades\Log::error('Mail sending failed: ' . $mailException->getMessage());
+            }
 
             return redirect()->route('order.success', $order)
                 ->with('success', '🎉 Payment received! Your order has been placed successfully.');

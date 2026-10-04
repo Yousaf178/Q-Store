@@ -21,7 +21,7 @@
 
 <!-- Statistics Cards -->
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-primary text-white h-100">
             <div class="card-body p-4 d-flex justify-content-between align-items-center">
                 <div>
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-success text-white h-100">
             <div class="card-body p-4 d-flex justify-content-between align-items-center">
                 <div>
@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-info text-white h-100">
             <div class="card-body p-4 d-flex justify-content-between align-items-center">
                 <div>
@@ -73,6 +73,25 @@
             <div class="card-footer bg-info-subtle border-0 py-2">
                 <a href="{{ route('admin.users.index') }}" class="text-dark text-decoration-none small fw-semibold d-flex justify-content-between align-items-center">
                     Manage Users <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-warning text-dark h-100">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-dark-50 mb-2 fw-semibold opacity-75">Total Orders</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ $ordersCount ?? 0 }}</h2>
+                </div>
+                <div class="fs-1 text-dark opacity-50">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-warning-subtle border-0 py-2">
+                <a href="{{ route('admin.orders.index') }}" class="text-dark text-decoration-none small fw-semibold d-flex justify-content-between align-items-center">
+                    Manage Orders <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
         </div>

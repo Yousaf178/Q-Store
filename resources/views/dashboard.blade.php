@@ -3,19 +3,17 @@
 @section('title', 'Products - QShop')
 
 @section('content')
-<div class="row mb-4">
+<div class="row">
     <div class="col-md-12">
-        <div class="p-4 bg-white rounded-3 shadow-sm border">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                    <h2 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}!</h2>
-                    <p class="text-muted mb-0">Browse items, add products to your cart, and checkout with secure online payment.</p>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <a href="{{ route('cart.index') }}" class="btn btn-warning fw-semibold">
-                        <i class="bi bi-cart3 me-1"></i> View Cart
-                    </a>
-                </div>
+        <div class="hero-section d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="fw-bold mb-2">Welcome back, {{ Auth::user()->name }}! 👋</h1>
+                <p class="fs-5 mb-0 opacity-75">Discover our latest products, add them to your cart, and enjoy a seamless checkout experience.</p>
+            </div>
+            <div>
+                <a href="{{ route('cart.index') }}" class="btn btn-warning btn-lg fw-bold shadow-sm">
+                    <i class="bi bi-cart3 me-2"></i> Go to Cart
+                </a>
             </div>
         </div>
     </div>
@@ -23,22 +21,43 @@
 
 <!-- Search Products -->
 <div class="row mb-4">
-    <div class="col-md-8 mx-auto">
-        <form action="{{ route('dashboard') }}" method="GET">
-            <div class="input-group input-group-lg shadow-sm">
-                <input
-                    type="text"
-                    name="search"
-                    class="form-control"
-                    placeholder="Search products by name or description..."
-                    value="{{ request('search') }}"
-                >
-                <button type="submit" class="btn btn-primary px-4">
-                    <i class="bi bi-search me-1"></i> Search
-                </button>
-                @if(request('search'))
-                    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">Clear</a>
-                @endif
+    <div class="col-md-10 mx-auto">
+        <form action="{{ route('dashboard') }}" method="GET" class="card p-3 shadow-sm border-0">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="Search products..."
+                        value="{{ request('search') }}"
+                    >
+                </div>
+                <div class="col-md-3">
+                    <input
+                        type="text"
+                        name="brand"
+                        class="form-control"
+                        placeholder="Filter by brand..."
+                        value="{{ request('brand') }}"
+                    >
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ request('min_price') }}" min="0">
+                        <span class="input-group-text">-</span>
+                        <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ request('max_price') }}" min="0">
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 flex-grow-1">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    @if(request('search') || request('min_price') || request('max_price') || request('brand'))
+                        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">Clear</a>
+                    @endif
+                </div>
             </div>
         </form>
     </div>
@@ -66,11 +85,19 @@
                             <span class="fw-bold text-success fs-5">${{ number_format($product->price, 2) }}</span>
                         </div>
 
-                        <h5 class="card-title fw-bold">
+                        <h5 class="card-title fw-bold mb-1">
                             <a href="{{ route('products.details', $product) }}" class="text-decoration-none text-dark">
                                 {{ $product->name }}
                             </a>
                         </h5>
+
+                        @if($product->brand)
+                            <div class="small text-primary fw-semibold mb-2">
+                                <i class="bi bi-tag-fill me-1"></i>{{ $product->brand }}
+                            </div>
+                        @else
+                            <div class="mb-2"></div>
+                        @endif
 
                         <p class="card-text text-muted small flex-grow-1">
                             {{ Str::limit($product->description ?? 'No description available.', 85) }}
