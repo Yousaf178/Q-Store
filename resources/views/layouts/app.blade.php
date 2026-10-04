@@ -98,6 +98,10 @@
 
                 <ul class="navbar-nav ms-auto align-items-center">
                     @auth
+                        @if(Auth::user()->isAdmin())
+                            @include('admin.partials.notification-bell')
+                        @endif
+
                         @php
                             $cartCount = 0;
                             if (session()->has('cart')) {
@@ -235,11 +239,44 @@
                     .catch(err => console.error('Error fetching notifications:', err));
             }
 
+            // Bell dropdown: refresh the badge and the list without reloading the page.
+            const notificationList = document.getElementById('adminNotificationList');
+            const notificationBadge = document.getElementById('adminNotificationBadge');
+
+            function refreshAdminNotifications() {
+                if (!notificationList || !notificationBadge) {
+                    return;
+                }
+
+                fetch(@json(route('admin.notifications.feed')), { headers: { 'Accept': 'application/json' } })
+                    .then(res => res.json())
+                    .then(data => {
+                        notificationList.innerHTML = data.html;
+
+                        if (data.unread_count > 0) {
+                            notificationBadge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                            notificationBadge.classList.remove('d-none');
+                        } else {
+                            notificationBadge.classList.add('d-none');
+                        }
+                    })
+                    .catch(err => console.error('Error fetching notifications:', err));
+            }
+
             // Run check immediately on page load to catch events that happened while navigating
             checkNotifications();
+            refreshAdminNotifications();
 
-            // Then continuously poll every 10 seconds
-            setInterval(checkNotifications, 10000);
+            // Then continuously poll every 10 seconds. The bell refreshes on every third
+            // tick (30s) so each open admin tab stays at a small number of queries.
+            let notificationTick = 0;
+            setInterval(function () {
+                checkNotifications();
+
+                if (++notificationTick % 3 === 0) {
+                    refreshAdminNotifications();
+                }
+            }, 10000);
         @endif
     </script>
 </body>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Mail\WelcomeMail;
+use App\Notifications\NewUserRegistered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -96,6 +97,12 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             \Log::error('Welcome email failed: ' . $e->getMessage());
         }
+
+        // Notify every admin about the new registration (skipping the new account itself).
+        User::where('role', 'admin')
+            ->whereKeyNot($user->getKey())
+            ->get()
+            ->each(fn (User $admin) => $admin->notify(new NewUserRegistered($user)));
 
         if ($user->isAdmin()) {
             return redirect()->route('admin.dashboard')

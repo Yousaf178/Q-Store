@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\NewOrderPlaced;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -123,8 +124,14 @@ class CheckoutController extends Controller
             // Clear session cart
             session()->forget('cart');
 
-            // Send order confirmation email to the customer
             $order->load('items');
+
+            // Notify every admin that a new order came in (after the transaction committed).
+            User::where('role', 'admin')
+                ->get()
+                ->each(fn (User $admin) => $admin->notify(new NewOrderPlaced($order)));
+
+            // Send order confirmation email to the customer
             try {
                 Mail::to($order->customer_email)->send(new OrderPlacedMail($order));
 

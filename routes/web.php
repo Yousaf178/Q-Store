@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\AdminUserController;
 use App\Models\Product;
 use App\Models\Category;
@@ -113,6 +114,14 @@ Route::middleware('auth')->group(function () {
                 'latest_user_id' => $latestUser ? $latestUser->id : 0,
             ]);
         })->name('admin.notifications.check');
+
+        // Admin notification bell (database notifications)
+        Route::get('/admin/notifications/feed', [AdminNotificationController::class, 'feed'])
+            ->name('admin.notifications.feed');
+        Route::post('/admin/notifications/read-all', [AdminNotificationController::class, 'readAll'])
+            ->name('admin.notifications.read-all');
+        Route::post('/admin/notifications/{notification}/read', [AdminNotificationController::class, 'read'])
+            ->name('admin.notifications.read');
 
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
 
