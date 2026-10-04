@@ -55,6 +55,11 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @auth
+                        @php
+                            // Unread support-chat messages for the signed-in account.
+                            $chatUnread = \App\Models\Message::unreadCountFor(Auth::user());
+                        @endphp
+
                         @if(Auth::user()->isAdmin())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
@@ -81,6 +86,12 @@
                                     <i class="bi bi-card-checklist me-1"></i> Manage Orders
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.messages.*') ? 'active' : '' }}" href="{{ route('admin.messages.index') }}">
+                                    <i class="bi bi-chat-dots me-1"></i> Messages
+                                    <span id="chatNavBadge" class="badge bg-danger rounded-pill {{ $chatUnread > 0 ? '' : 'd-none' }}">{{ $chatUnread > 99 ? '99+' : $chatUnread }}</span>
+                                </a>
+                            </li>
                         @else
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
@@ -90,6 +101,12 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}">
                                     <i class="bi bi-bag-check me-1"></i> My Orders
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}" href="{{ route('messages.index') }}">
+                                    <i class="bi bi-chat-dots me-1"></i> Support Chat
+                                    <span id="chatNavBadge" class="badge bg-danger rounded-pill {{ $chatUnread > 0 ? '' : 'd-none' }}">{{ $chatUnread > 99 ? '99+' : $chatUnread }}</span>
                                 </a>
                             </li>
                         @endif

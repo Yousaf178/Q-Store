@@ -6,6 +6,7 @@
         $icon = match ($type) {
             'new_order' => 'bi-bag-check',
             'new_user' => 'bi-person-plus',
+            'new_chat_message' => 'bi-chat-dots',
             default => 'bi-bell',
         };
     @endphp
@@ -41,6 +42,14 @@
                         @if(!empty($data['user_role']))
                             &bull; {{ ucfirst($data['user_role']) }}
                         @endif
+                    </span>
+                @elseif($type === 'new_chat_message')
+                    <span class="d-block text-muted" style="font-size: .78rem;">
+                        Support chat
+                        @if(!empty($data['user_email']))
+                            &bull; {{ $data['user_email'] }}
+                        @endif
+                        &bull; Open conversation
                     </span>
                 @endif
 

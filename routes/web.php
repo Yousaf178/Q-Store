@@ -9,7 +9,9 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminNotificationController;
+use App\Http\Controllers\AdminMessageController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\MessageController;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\User;
@@ -80,6 +82,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/clear', [CartController::class, 'clear'])->name('clear');
     });
 
+    // Support chat (customer side)
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::get('/messages/feed', [MessageController::class, 'feed'])->name('messages.feed');
+
     // Checkout & Online Payment Routes
     Route::get('/checkout', [CheckoutController::class, 'showCheckout'])->name('checkout');
     Route::post('/checkout/process', [CheckoutController::class, 'processPayment'])->name('checkout.process');
@@ -124,6 +131,12 @@ Route::middleware('auth')->group(function () {
             ->name('admin.notifications.read');
 
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+
+        // Admin chat inbox
+        Route::get('/admin/messages', [AdminMessageController::class, 'index'])->name('admin.messages.index');
+        Route::get('/admin/messages/{user}', [AdminMessageController::class, 'show'])->name('admin.messages.show');
+        Route::post('/admin/messages/{user}', [AdminMessageController::class, 'store'])->name('admin.messages.store');
+        Route::get('/admin/messages/{user}/feed', [AdminMessageController::class, 'feed'])->name('admin.messages.feed');
 
         // Admin Order Routes
         Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
