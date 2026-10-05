@@ -142,7 +142,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
         Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
         Route::post('/admin/orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
-
+  
         Route::resource('products', ProductController::class);
         Route::resource('categories', CategoryController::class);
     });
